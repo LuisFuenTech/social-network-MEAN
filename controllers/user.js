@@ -1,3 +1,7 @@
+//Using promises on mongoose
+const mongoose = require('mongoose')
+mongoose.Promise = global.Promise
+
 const User = require('../models/user')
 const bcrypt = require('bcrypt-nodejs')
 const serviceJwt = require('../services/jwt')
@@ -21,7 +25,7 @@ const test = (req, res) => {
 
 const saveUser = (req, res) => {
     //Getting data from browser
-    const {name, surname, nick, email, password} = req.body;
+    const { name, surname, nick, email, password } = req.body;
     //Declare a new User
     const user = new User()
 
@@ -45,31 +49,25 @@ const saveUser = (req, res) => {
                 { nick: user.nick.toLowerCase() }
             ]
         })
-            .exec((err, users) => {
-                if (err) return res.status(500).send({ message: 'Error getting users' })
+            .then((users) => {
 
                 if (users.length >= 1) {
                     return res.status(200).send({ message: "User already exits" })
                 }
-                else {
-                    //Save data
-                    bcrypt.hash(password, null, null, (err, hash) => {
-                        user.password = hash
 
-                        user.save((err, userStorage) => {
-                            if (err) return res.status(500).send({ message: 'Error saving user' })
+                //Save data
+                bcrypt.hash(password, null, null, (err, hash) => {
+                    user.password = hash
 
-                            if (userStorage) {
-                                res.status(200).send({ user: userStorage})
-                            }
-                            else {
-                                res.status(404).send({ message: "User dont registered" })
-                            }
+                    user.save()
+                        .then((userStoraged) => {
+                            res.status(200).send({ user: userStoraged })
                         })
-                    })
-                }
+                })
             })
-
+            .catch((err) => {
+                return res.status(500).send({ message: 'Error on query' })
+            })
     }
     else {
         res.status(200).send({
@@ -83,45 +81,47 @@ const loginUSer = (req, res) => {
     const params = req.body
 
     //Get email and password
-    const {email} = params
-    const {password} = params
+    const { email } = params
+    const { password } = params
 
     //Execute find in thedatabase by email
     //findOne returns an err or the query (user)
-    User.findOne({email}, (err, user) => {
-        if(err) return res.status(500).send({message: "Error on query"})
+    User.findOne({ email })
+        .then((user) => {
 
-        //If user exists...
-        if(user){
-            //Compare the password on db and the given by browser
-            bcrypt.compare(password, user.password, (err, check) => {
-                //If they match
-                if(check){
+            //If user exists...
+            if (user) {
+                //Compare the password on db and the given by browser
+                bcrypt.compare(password, user.password, (err, check) => {
+                    //If they match
+                    if (check) {
 
-                    //Return user
-                    console.log('Login successful')
+                        //Return user
+                        console.log('Login successful')
 
-                    if(params.gettoken){
-                        res.status(200).send({
-                            token: serviceJwt.createToken(user)
-                        })
-                    }else{
-                        user.password = undefined //Dont send the password
-                    return res.status(200).send({user})
+                        if (params.gettoken) {
+                            res.status(200).send({
+                                token: serviceJwt.createToken(user)
+                            })
+                        } else {
+                            user.password = undefined //Dont send the password
+                            return res.status(200).send({ user })
+                        }
                     }
-                    
-                }
-                else{
-                    console.log('Passwords dont match')
-                    return res.status(404).send({ message: "Wrong password" })
-                }
-            })
-        }
-        else{
-            console.log('User dont exists')
-            return res.status(404).send({ message: "User doesnt exist" })
-        }
-    })
+                    else {
+                        console.log('Passwords dont match')
+                        return res.status(404).send({ message: "Wrong password" })
+                    }
+                })
+            }
+            else {
+                console.log('User dont exists')
+                return res.status(404).send({ message: "User doesnt exist" })
+            }
+        })
+        .catch((err) => {
+            return res.status(500).send({ message: 'Error on query' })
+        })
 }
 
 //Get user's information
@@ -132,22 +132,25 @@ const getUser = (req, res) => {
     */
     const userId = req.params.id
 
-    User.findById(userId, (err, user) => {
-        if(err) return res.status(500).send({message: "Error on request"})
+    User.findById(userId)
+        .then((user) => {
 
-        if(!user) return res.status(404).send({message: "User doesn\'t exist"})
+            if (!user) return res.status(404).send({ message: "User doesn\'t exist" })
 
-        return res.status(200).send({user})
-    })
+            return res.status(200).send({ user })
+        })
+        .catch((err) => {
+            return res.status(500).send({ message: 'Error on query' })
+        })
 }
 
 //Get user list paginated
 const getUsers = (req, res) => {
     const idUserLogged = req.user.sub
-    let page = 1 
+    let page = 1
 
     //If we get a number page from url
-    if(req.params.page){
+    if (req.params.page) {
         page = req.params.page
     }
 
@@ -156,35 +159,35 @@ const getUsers = (req, res) => {
 
     //Find and sort the documents
     User.find().sort('_id').paginate(page, itemsPerPage, (err, users, total) => {
-        if(err) return res.status(500).send({message: "Error on request"})
+        if (err) return res.status(500).send({ message: "Error on request" })
 
-        if(!users) return res.status(404).send({message: "Users unavailable"})
+        if (!users) return res.status(404).send({ message: "Users unavailable" })
 
         return res.status(200).send({
             users,
             total,
-            pages: Math.ceil(total/itemsPerPage)
+            pages: Math.ceil(total / itemsPerPage)
         })
-    })
+    })        
 }
 
 //Updating user's information
 const updateUser = (req, res) => {
     const userId = req.params.id //By url
     const toUpdate = req.body
-    
+
     delete update.password
 
-    if(userId != req.user.sub){
-        return res.status(500).send({message: "You don\'t allow to update user\'s information"})
-    } 
+    if (userId != req.user.sub) {
+        return res.status(500).send({ message: "You don\'t allow to update user\'s information" })
+    }
 
-    User.findByIdAndUpdate(userId, toUpdate, {new: true}, (err, userUpdated) => {
-        if(err) return res.status(500).send({message: "Error on request"})
+    User.findByIdAndUpdate(userId, toUpdate, { new: true }, (err, userUpdated) => {
+        if (err) return res.status(500).send({ message: "Error on request" })
 
-        if(!userUpdated) return res.status(404).send({message: "User cannot be update"})
+        if (!userUpdated) return res.status(404).send({ message: "User cannot be update" })
 
-        return res.status(200).send({user: userUpdated})
+        return res.status(200).send({ user: userUpdated })
     })
 }
 
@@ -192,7 +195,7 @@ const updateUser = (req, res) => {
 const uploadImage = (req, res) => {
     const userId = req.params.id
 
-    if(req.files){
+    if (req.files) {
         const file_path = req.files.image.path
         console.log(file_path)
         const file_split = file_path.split('\\')
@@ -201,25 +204,28 @@ const uploadImage = (req, res) => {
         const extentionFile = ext_split[1]
         console.log(extentionFile)
 
-        if(userId != req.user.sub)
+        if (userId != req.user.sub)
             return removeFilesOfUpload(res, file_path, "You don\'t allow to update user\'s information")
 
-        if(extentionFile == 'png' || extentionFile == 'jpg' || extentionFile == 'jpeg' || extentionFile == 'gif'){
+        if (extentionFile == 'png' || extentionFile == 'jpg' || extentionFile == 'jpeg' || extentionFile == 'gif') {
             //Update the document
-            User.findByIdAndUpdate(userId, {image: file_name}, {new: true}, (err, userUpdated) => {
-                if(err) return res.status(500).send({message: "Error on request"})
+            User.findByIdAndUpdate(userId, { image: file_name }, { new: true })
+            .then((userUpdated) => {
 
-                if(!userUpdated) return res.status(404).send({message: "User cannot be update"})
+                if (!userUpdated) return res.status(404).send({ message: "User cannot be update" })
 
-                return res.status(200).send({user: userUpdated})
+                return res.status(200).send({ user: userUpdated })
+            })
+            .catch((err) => {
+                return res.status(500).send({ message: 'Error on query' })
             })
         }
-        else 
+        else
             return removeFilesOfUpload(res, file_path, "Invalid extension")
 
     }
-    else 
-        return res.status(200).send({message: "File hasn\'t been uploaded"})
+    else
+        return res.status(200).send({ message: "File hasn\'t been uploaded" })
 }
 
 function getImageFile(req, res) {
@@ -228,19 +234,19 @@ function getImageFile(req, res) {
     console.log(path_file)
 
     fs.exists(path_file, (exists) => {
-        if(exists){
+        if (exists) {
             console.log('Image ok')
             res.sendFile(path.resolve(path_file))
         }
         else
-        console.log('Error image')
-            res.status(200).send({message: "Image does not exist"})
+            console.log('Error image')
+        res.status(200).send({ message: "Image does not exist" })
     })
 }
 
-function removeFilesOfUpload(res, file_path, message){
+function removeFilesOfUpload(res, file_path, message) {
     fs.unlink(file_path, (err) => {
-        return res.status(200).send({message: message})
+        return res.status(200).send({ message: message })
     })
 }
 
