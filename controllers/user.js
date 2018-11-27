@@ -230,7 +230,7 @@ const uploadImage = (req, res) => {
 
 function getImageFile(req, res) {
     const image_file = req.params.imageFile;
-    const path_file = "./uploads/users" + image_file
+    const path_file = "./uploads/users/" + image_file
     console.log(path_file)
 
     fs.exists(path_file, (exists) => {
@@ -238,9 +238,10 @@ function getImageFile(req, res) {
             console.log('Image ok')
             res.sendFile(path.resolve(path_file))
         }
-        else
+        else{
             console.log('Error image')
-        res.status(200).send({ message: "Image does not exist" })
+            res.status(200).send({ message: "Image does not exist" })
+        }
     })
 }
 
