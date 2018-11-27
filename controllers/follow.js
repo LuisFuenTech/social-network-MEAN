@@ -107,9 +107,37 @@ const getFollowedUsers = (req, res) => {
         })
 } 
 
+const getMyFollows = (req, res) => {
+    const userId = req.user.sub  
+    const followed = req.params.followed
+
+    /*  Find documents when user logged is the follower
+        so, this query going to find all users that I follow
+    */
+    let findFollow = Follow.find({user: userId})
+
+    /*
+    *   Find all documents where user logged is followed by anyone else
+        so, this query going to find all users that follow me
+    */
+    if(followed)
+    findFollow = Follow.find({followed: userId})
+
+    findFollow.populate("user followed")
+        .then((follows) => {
+            if(!follows) return res.status(500).send({message: "You don\'t follow anyone"})
+
+            return res.status(200).send({follows})
+        })
+        .catch((err) => {
+            return res.status(500).send({ message: "Error on server" })
+        })
+}
+
 module.exports = {
     saveFollow,
     deleteFollow,
     getFollowingUSers, 
-    getFollowedUsers
+    getFollowedUsers,
+    getMyFollows
 }
