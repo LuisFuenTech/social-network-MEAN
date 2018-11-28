@@ -8,7 +8,11 @@ const multiParty = require('connect-multiparty')
 const mdUpload = multiParty({uploadDir: './uploads/publications'})
 
 api.get('/test-pub', mdAuth.ensureAuth, publicationController.testing)
-api.get('/publications/:page?', mdAuth.ensureAuth, publicationController.getPublication)
+api.get('/publications/:page?', mdAuth.ensureAuth, publicationController.getPublications)
+api.get('/publication/:id', mdAuth.ensureAuth, publicationController.getOnePublication)
+api.get('/get-image-pub/:imageFile', publicationController.getImageFile)
+api.post('/upload-image-pub/:id', [mdAuth.ensureAuth, mdUpload], publicationController.uploadImage)
 api.post('/publication', mdAuth.ensureAuth, publicationController.savePublication)
+api.delete('/publication/:id', mdAuth.ensureAuth, publicationController.deletePublication)
 
 module.exports = api
