@@ -59,7 +59,7 @@ const getPublication = (req, res) => {
 
             Publication.find({user: {$in: follows_clean}})
                         .sort('-createAt')
-                        .populate('user')
+                        .populate('User')
                         .paginate(page, itemsPerPage, (err, publications, total) => {
                             
                             if (err) 
