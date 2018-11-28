@@ -6,7 +6,7 @@ const mdAuth = require('../middlewares/authenticate')
 api.post('/follow', mdAuth.ensureAuth, followController.saveFollow)
 api.delete('/follow/:id', mdAuth.ensureAuth, followController.deleteFollow)
 api.get('/following/:id?/:page?', mdAuth.ensureAuth, followController.getFollowingUSers)
-api.get('/followed/:id?/:page?', mdAuth.ensureAuth, followController.getFollowedUsers)
+api.get('/followers/:id?/:page?', mdAuth.ensureAuth, followController.getFollowersUsers)
 api.get('/get-my-follows/:followed?', mdAuth.ensureAuth, followController.getMyFollows)
 
 module.exports = api

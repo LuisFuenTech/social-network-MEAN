@@ -15,7 +15,8 @@ const saveFollow = (req, res) => {
 
     follow.save()
         .then((followStoraged) => {
-            if (!followStoraged) return res.status(404).send({ message: "Following hasnt been saved" })
+            if (!followStoraged) 
+                return res.status(404).send({ message: "Following hasnt been saved" })
 
             return res.status(200).send({ follow: followStoraged })
         })
@@ -42,27 +43,26 @@ const deleteFollow = (req, res) => {
 const getFollowingUSers = (req, res) => {
     let userId = req.user.sub
 
-    if (req.params.id && req.params.page) {
+    if (req.params.id && req.params.page)
         userId = req.params.id
-    }
 
     let page = 1
 
-    if (req.params.page) {
+    if (req.params.page)
         page = req.params.page
-    }
-    else{
+    else
         page = req.params.id
-    }
 
     let itemsPerPage = 4
 
     Follow.find({ user: userId })
         .populate({ path: "followed" })
         .paginate(page, itemsPerPage, (err, follows, total) => {
-            if (err) return res.status(500).send({ message: "Error on server" })
+            if (err) 
+                return res.status(500).send({ message: "Error on server" })
 
-            if (!follows) return res.status(404).send({ message: "Dont following someone" })
+            if (!follows) 
+                return res.status(404).send({ message: "Dont following someone" })
 
             return res.status(200).send({
                 total: total,
@@ -73,31 +73,30 @@ const getFollowingUSers = (req, res) => {
 }
 
 //Users who follow us
-const getFollowedUsers = (req, res) => {
+const getFollowersUsers = (req, res) => {
     //User identified
     let userId = req.user.sub
 
-    if (req.params.id && req.params.page) {
+    if (req.params.id && req.params.page)
         userId = req.params.id
-    }
 
     let page = 1
 
-    if (req.params.page) {
+    if (req.params.page)
         page = req.params.page
-    }
-    else{
+    else
         page = req.params.id
-    }
 
     let itemsPerPage = 4
 
     Follow.find({ followed: userId })
         .populate('user')
         .paginate(page, itemsPerPage, (err, follows, total) => {
-            if (err) return res.status(500).send({ message: "Error on server" })
+            if (err) 
+                return res.status(500).send({ message: "Error on server" })
 
-            if (!follows) return res.status(404).send({ message: "No one follow you" })
+            if (!follows) 
+                return res.status(404).send({ message: "No one follow you" })
 
             return res.status(200).send({
                 total: total,
@@ -121,11 +120,12 @@ const getMyFollows = (req, res) => {
         so, this query going to find all users that follow me
     */
     if(followed)
-    findFollow = Follow.find({followed: userId})
+        findFollow = Follow.find({followed: userId})
 
     findFollow.populate("user followed")
         .then((follows) => {
-            if(!follows) return res.status(500).send({message: "You don\'t follow anyone"})
+            if(!follows) 
+                return res.status(500).send({message: "You don\'t follow anyone"})
 
             return res.status(200).send({follows})
         })
@@ -138,6 +138,6 @@ module.exports = {
     saveFollow,
     deleteFollow,
     getFollowingUSers, 
-    getFollowedUsers,
+    getFollowersUsers,
     getMyFollows
 }
