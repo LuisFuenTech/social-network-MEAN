@@ -4,6 +4,7 @@ mongoose.Promise = global.Promise
 
 const User = require('../models/user')
 const Follow = require('../models/follow')
+const Publication = require('../models/publication')
 const bcrypt = require('bcrypt-nodejs')
 const serviceJwt = require('../services/jwt')
 const mongoosePaginate = require('mongoose-pagination')
@@ -280,9 +281,18 @@ const getCountFollow = async (userId) => {
         return res.status(500).send({ message: "Error on request" })
     })
 
+    const publications = await Publication.countDocuments({user: userId})
+    .then((count) => {
+        return count
+    })
+    .catch(err => {
+        return res.status(500).send({ message: "Error on request" })
+    })
+
     return {
         following: following,
-        followed: followed
+        followed: followed,
+        publications: publications
     }
 }
 

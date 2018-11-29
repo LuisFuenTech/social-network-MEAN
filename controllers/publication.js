@@ -38,8 +38,12 @@ const savePublication = (req, res) => {
 
 }
 
+/**
+ * This method show all publications from users
+ * that I follow. Timeline method
+ */
 const getPublications = (req, res) => {
-    var page = 1
+    let page = 1
 
     if (req.params.page)
         page = req.params.page
@@ -50,14 +54,19 @@ const getPublications = (req, res) => {
         .find({ user: req.user.sub })
         .populate('followed')
         .then((follows) => {
-            console.log('Inside then')
             var follows_clean = []
 
+            /**
+             * Fill an array with all user that I follow
+             */
             follows.forEach((follow) => {
                 follows_clean.push(follow.followed)
             })
-            console.log(follows_clean)
 
+            /**
+             * Search for publications that belong to a user inside
+             * follows_clean
+             */
             Publication
                 .find({ user: { $in: follows_clean } })
                 .sort('-createAt')
@@ -84,6 +93,10 @@ const getPublications = (req, res) => {
         })
 }
 
+/**
+ * Get one publication using its id,
+ * don't matter if I dont own the publication
+ */
 const getOnePublication = (req, res) => {
     const publicationId = req.params.id
 
@@ -91,7 +104,7 @@ const getOnePublication = (req, res) => {
         .findOne({_id: publicationId})
         .then((publication) => {
             if (!publication)
-                return res.status(404).send({ message: "Publication does not exist" })
+                return res.status(404).send({ message: "Publication doesn\'t exist" })
 
             return res.status(200).send({ publication })
         })
@@ -105,13 +118,13 @@ const deletePublication = (req, res) => {
     const publicationId = req.params.id
 
     Publication
-        .findOne({ user: req.user.sub, _id: publicationId })
-        .deleteOne((err) => {
-            if (err)
-                return res.status(404).send({ message: "Publication has not been removed" })
-
+        .findOneAndDelete({ user: req.user.sub, _id: publicationId })
+        .then((deleted) => {
+            if(!deleted)
+                return res.status(400).send({message: "Publication doesn\'t exist"})
+            
             console.log('Removing publication succeed')
-            return res.status(200).send({ message: "Publication has been removed" })
+            return res.status(200).send({ deleted: deleted })
         })
         .catch((err) => {
             console.log("Error:", err)
@@ -125,23 +138,23 @@ const uploadImage = (req, res) => {
 
     if (req.files) {
         const file_path = req.files.image.path
-        console.log(file_path)
         const file_split = file_path.split('\\')
         const file_name = file_split[2]
         const ext_split = file_name.split('\.')
-        const extentionFile = ext_split[1]
-        console.log(extentionFile)
+        const extentionFile = ext_split[1]       
 
         if (extentionFile == 'png' || extentionFile == 'jpg' || extentionFile == 'jpeg' || extentionFile == 'gif') {
             Publication
                 .findOne({ user: req.user.sub, _id: publicationId })
                 .then((publication) => {
+
                     if (publication) {
                         Publication
-                            .findOneAndUpdate(publicationId, { file: file_name }, { new: true })
+                            .findByIdAndUpdate(publicationId, { file: file_name }, { new: true })
                             .then((publicationUpdated) => {
 
-                                if (!publicationUpdated) return res.status(404).send({ message: "User cannot be update" })
+                                if (!publicationUpdated) 
+                                    return res.status(404).send({ message: "Publication cannot be updated" })
 
                                 return res.status(200).send({ publication: publicationUpdated })
                             })
@@ -151,7 +164,7 @@ const uploadImage = (req, res) => {
                             })
                     }
                     else
-                    return removeFilesOfUpload(res, file_path, "You don\'t allow to update this publication")  
+                        return removeFilesOfUpload(res, file_path, "You don\'t allow to update this publication")  
                 })
                 .catch((err) => {
                     console.log("Error:", err)

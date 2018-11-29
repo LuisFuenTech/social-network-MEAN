@@ -90,7 +90,7 @@ const getFollowersUsers = (req, res) => {
     let itemsPerPage = 4
 
     Follow.find({ followed: userId })
-        .populate('User')
+        .populate('user')
         .paginate(page, itemsPerPage, (err, follows, total) => {
             if (err) 
                 return res.status(500).send({ message: "Error on server" })
