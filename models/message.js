@@ -3,8 +3,9 @@ const { Schema } = mongoose
 
 const messageSchema = new Schema({
     text: String,
+    seen: String,
     createAt: String,
-    emmiter: {type: Schema.ObjectId, ref: 'User'},
+    emitter: {type: Schema.ObjectId, ref: 'User'},
     receiver: {type: Schema.ObjectId, ref: 'User'}
 })
 
