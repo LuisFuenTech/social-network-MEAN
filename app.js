@@ -30,5 +30,4 @@ app.use('/api', publicationRoutes)
 app.use('/api', messageRoutes)
 
 //Export
-
 module.exports = app;

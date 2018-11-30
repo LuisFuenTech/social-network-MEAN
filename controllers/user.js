@@ -54,7 +54,7 @@ const saveUser = (req, res) => {
             .then((users) => {
 
                 if (users.length >= 1)
-                    return res.status(200).send({ message: "User already exits" })
+                    return res.status(200).send({ message: "User already exists" })
 
                 //Save data
                 bcrypt.hash(password, null, null, (err, hash) => {
@@ -100,7 +100,7 @@ const loginUSer = (req, res) => {
                         //Return user
                         console.log('Login successful')
 
-                        if (params.gettoken) {
+                        if (params.getToken) {
                             res.status(200).send({
                                 token: serviceJwt.createToken(user)
                             })
@@ -116,8 +116,8 @@ const loginUSer = (req, res) => {
                 })
             }
             else {
-                console.log('User dont exists')
-                return res.status(404).send({ message: "User doesnt exist" })
+                console.log('User doesn\'t exist')
+                return res.status(404).send({ message: "User doesn\'t exist" })
             }
         })
         .catch((err) => {
@@ -140,7 +140,7 @@ const getUser = (req, res) => {
                 return res.status(404).send({ message: "User doesn\'t exist" })
 
             /** 
-             * This block going to find out if Us as a user logged are
+             * This block going to find out if We as a user logged are
              * following the user given by url userId
              * */
             followThisUser(req.user.sub, userId)

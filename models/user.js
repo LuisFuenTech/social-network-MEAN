@@ -9,6 +9,6 @@ const userSchema = new Schema({
     password: String,
     role: String,
     image: String
-})
+}, {versionKey: false})
 
 module.exports = mongoose.model('User', userSchema)

@@ -6,6 +6,6 @@ const publicationSchema = new Schema({
        file: String,
        createAt: String,
        user: {type: Schema.ObjectId, ref: 'User'}
-})
+}, {versionKey: false})
 
 module.exports = mongoose.model('Publication', publicationSchema)

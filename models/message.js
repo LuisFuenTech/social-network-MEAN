@@ -7,6 +7,6 @@ const messageSchema = new Schema({
     createAt: String,
     emitter: {type: Schema.ObjectId, ref: 'User'},
     receiver: {type: Schema.ObjectId, ref: 'User'}
-})
+}, {versionKey: false})
 
 module.exports = mongoose.model('Message', messageSchema)
